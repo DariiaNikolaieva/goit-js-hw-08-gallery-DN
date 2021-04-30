@@ -153,14 +153,14 @@ let currentImgIndex = 0;
 function onRightBtnClick() {
   if (currentImgIndex < quantityOfImg.length - 1) {
     currentImgIndex += 1;
-    lightboxImg.src = quantityOfImg[currentImgIndex].src;
+    lightboxImg.src = quantityOfImg[currentImgIndex].dataset.source;
   }
 }
 
 function onLeftBtnClick() {
   if (currentImgIndex > 0) {
     currentImgIndex -= 1;
-    lightboxImg.src = quantityOfImg[currentImgIndex].src;
+    lightboxImg.src = quantityOfImg[currentImgIndex].dataset.source;
   }
 }
 
