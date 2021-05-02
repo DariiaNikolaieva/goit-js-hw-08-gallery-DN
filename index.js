@@ -64,17 +64,21 @@ const images = [
   },
 ];
 
-// элементы
-const galleryContainer = document.querySelector(".js-gallery");
+// объявление переменных
+const galleryList = document.querySelector(".js-gallery");
+// console.log(galleryList);
+const lightbox = document.querySelector(".js-lightbox");
+const overlay = document.querySelector(".lightbox__overlay");
+const lightboxImg = document.querySelector(".lightbox__image");
 const lightboxCloseBtn = document.querySelector(
   '[data-action="close-lightbox"]'
 );
-const lightbox = document.querySelector(".js-lightbox");
-const lightboxImg = document.querySelector(".lightbox__image");
-const overlay = document.querySelector(".lightbox__overlay");
+
+// слушатели событий
+lightboxCloseBtn.addEventListener("click", onCloseLightbox);
 
 // создание разметки
-function createImageCardsMarkup(images) {
+function onGalleryListMarkupCreate(images) {
   return images
     .map(({ preview, original, description }) => {
       return `<li class="gallery__item">
@@ -93,28 +97,44 @@ function createImageCardsMarkup(images) {
     })
     .join("");
 }
+// console.log(onGalleryListMarkupCreate);
 
 // рендер разметки
-const galleryContainerMarkup = createImageCardsMarkup(images);
-galleryContainer.insertAdjacentHTML("beforeend", galleryContainerMarkup);
+const galleryListMarkup = onGalleryListMarkupCreate(images);
+galleryList.insertAdjacentHTML("beforeend", galleryListMarkup);
 
-galleryContainer.addEventListener("click", onImageClick);
+// копия массива изображений
+const arrayOfImg = galleryList.querySelectorAll(".gallery__image");
+const newArrayOfImg = [...arrayOfImg];
+// console.log(arrayOfImg);
+// console.log(newArrayOfImg);
 
-function onImageClick(event) {
-  event.preventDefault();
+// событие по клику на изображение
+galleryList.addEventListener("click", onImgClick);
+
+function onImgClick(event) {
+  event.preventDefault(); /*отмена действия по умолчанию*/
+
   // определение области клика
   const isGalleryImageEl = event.target.classList.contains("gallery__image");
   if (!isGalleryImageEl) {
     return;
   }
-  // открытиe модального окна, подмена значения атрибута src
-  lightbox.classList.add("is-open");
-  lightboxImg.src = event.target.dataset.source;
 
-  window.addEventListener("keydown", onCloseLightboxByEsc);
+  onOpenLightbox(event.target);
 }
 
-lightboxCloseBtn.addEventListener("click", onCloseLightbox);
+function onOpenLightbox(img) {
+  // открытиe модального окна, подмена значения атрибута src, определение index
+  lightbox.classList.add("is-open");
+  lightboxImg.src = img.dataset.source;
+  lightboxImg.dataset.index = newArrayOfImg.indexOf(img);
+
+  // console.log(lightboxImg.dataset.index);
+
+  window.addEventListener("keydown", onArrowBtnPress);
+  window.addEventListener("keydown", onCloseLightboxByEsc);
+}
 
 function onCloseLightbox() {
   // закрытие модального окна
@@ -123,7 +143,28 @@ function onCloseLightbox() {
     openedLightbox.classList.remove("is-open");
   }
   lightboxImg.src = "";
+
   window.removeEventListener("keydown", onCloseLightboxByEsc);
+  window.removeEventListener("keydown", onArrowBtnPress);
+}
+
+function onImgThumb(move) {
+  const currentImgIndex = Number(lightboxImg.dataset.index);
+  // console.log(currentImgIndex);
+  let nextImgIndex = currentImgIndex + move;
+  // console.log(nextImgIndex);
+  if (nextImgIndex < 0) {
+    nextImgIndex = newArrayOfImg.length - 1;
+  }
+
+  if (nextImgIndex > newArrayOfImg.length - 1) {
+    nextImgIndex = 0;
+  }
+
+  lightboxImg.dataset.index = nextImgIndex;
+  // console.log(lightboxImg.dataset.index);
+  lightboxImg.src = newArrayOfImg[nextImgIndex].dataset.source;
+  // console.log(lightboxImg.src);
 }
 
 function onCloseLightboxByEsc(event) {
@@ -132,43 +173,11 @@ function onCloseLightboxByEsc(event) {
   }
 }
 
-overlay.addEventListener("click", onOverlayClick);
-
-function onOverlayClick(event) {
-  if (event.target === event.currentTarget) {
-    onCloseLightbox();
-  }
-}
-
-// карусель
-const arrayOfImgs = galleryContainer.querySelectorAll(".gallery__image");
-// console.log(arrayOfImgs);
-const quantityOfImg = [...arrayOfImgs];
-// console.log(quantityOfImg);
-
-window.addEventListener("keydown", onPressArrow);
-
-let currentImgIndex = 0;
-
-function onRightBtnClick() {
-  if (currentImgIndex < quantityOfImg.length - 1) {
-    currentImgIndex += 1;
-    lightboxImg.src = quantityOfImg[currentImgIndex].dataset.source;
-  }
-}
-
-function onLeftBtnClick() {
-  if (currentImgIndex > 0) {
-    currentImgIndex -= 1;
-    lightboxImg.src = quantityOfImg[currentImgIndex].dataset.source;
-  }
-}
-
-function onPressArrow(event) {
+function onArrowBtnPress(event) {
   if (event.code === "ArrowRight") {
-    onRightBtnClick();
+    onImgThumb(1);
   }
   if (event.code === "ArrowLeft") {
-    onLeftBtnClick();
+    onImgThumb(-1);
   }
 }

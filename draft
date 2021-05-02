@@ -1,0 +1,140 @@
+// элементы
+const galleryContainer = document.querySelector(".js-gallery");
+const lightboxCloseBtn = document.querySelector(
+  '[data-action="close-lightbox"]'
+);
+const lightbox = document.querySelector(".js-lightbox");
+const lightboxImg = document.querySelector(".lightbox__image");
+const overlay = document.querySelector(".lightbox__overlay");
+
+const arrayOfImgs = galleryContainer.querySelectorAll(".gallery__image");
+// console.log(arrayOfImgs);
+const newArrayOfImg = [...arrayOfImgs];
+// console.log(quantityOfImg);
+
+lightboxCloseBtn.addEventListener("click", onCloseLightbox);
+
+// создание разметки
+function createImageCardsMarkup(images) {
+  return images
+    .map(({ preview, original, description }) => {
+      return `<li class="gallery__item">
+  <a
+    class="gallery__link"
+    href="${original}"
+  >
+    <img
+      class="gallery__image"
+      src="${preview}"
+      data-source="${original}"
+      alt="${description}"
+    />
+  </a>
+</li>`;
+    })
+    .join("");
+}
+
+// рендер разметки
+const galleryContainerMarkup = createImageCardsMarkup(images);
+galleryContainer.insertAdjacentHTML("beforeend", galleryContainerMarkup);
+
+galleryContainer.addEventListener("click", onImageClick);
+
+function onImageClick(event) {
+  event.preventDefault();
+  // определение области клика
+  const isGalleryImageEl = event.target.classList.contains("gallery__image");
+  if (!isGalleryImageEl) {
+    return;
+  }
+
+  onOpenLightbox(event.target);
+}
+
+function onOpenLightbox(image) {
+  // открытиe модального окна, подмена значения атрибута src
+  lightbox.classList.add("is-open");
+
+  lightboxImg.src = image.dataset.source;
+  lightboxImg.dataset.index = newArrayOfImg.indexOf(image);
+
+  window.addEventListener("keydown", onArrowBtnPress);
+  window.addEventListener("keydown", onCloseLightboxByEsc);
+}
+
+function onCloseLightbox() {
+  // закрытие модального окна
+  const openedLightbox = document.querySelector(".lightbox.is-open");
+  if (openedLightbox) {
+    openedLightbox.classList.remove("is-open");
+  }
+  lightboxImg.src = "";
+
+  window.removeEventListener("keydown", onCloseLightboxByEsc);
+  window.removeEventListener("keydown", onArrowBtnPress);
+}
+
+overlay.addEventListener("click", onOverlayClick);
+
+function onOverlayClick(event) {
+  if (event.target === event.currentTarget) {
+    onCloseLightbox();
+  }
+}
+
+// карусель
+// const arrayOfImgs = galleryContainer.querySelectorAll(".gallery__image");
+// // console.log(arrayOfImgs);
+// const quantityOfImg = [...arrayOfImgs];
+// // console.log(quantityOfImg);
+
+// let currentImgIndex = 0;
+
+function onImgThumb(move) {
+  const currentImgIndex = Number(lightboxImg.dataset.index);
+  console.log(currentImgIndex);
+  let nextImgIndex = currentImgIndex + move;
+  console.log(nextImgIndex);
+  if (nextImgIndex < 0) {
+    nextImgIndex = newArrayOfImg.length - 1;
+  }
+
+  if (nextImgIndex > newArrayOfImg.length - 1) {
+    nextImgIndex = 0;
+  }
+
+  lightboxImg.dataset.index = nextImgIndex;
+  console.log(lightboxImg.dataset.index);
+  lightboxImg.src = newArrayOfImg[nextImgIndex].dataset.source;
+  console.log(lightboxImg.src);
+}
+
+// function onRightBtnClick() {
+//   if (currentImgIndex < quantityOfImg.length - 1) {
+//     currentImgIndex += 1;
+//     lightboxImg.src = quantityOfImg[currentImgIndex].dataset.source;
+//   }
+// }
+
+// function onLeftBtnClick() {
+//   if (currentImgIndex > 0) {
+//     currentImgIndex -= 1;
+//     lightboxImg.src = quantityOfImg[currentImgIndex].dataset.source;
+//   }
+// }
+
+function onCloseLightboxByEsc(event) {
+  if (event.code === "Escape") {
+    onCloseLightbox();
+  }
+}
+
+function onArrowBtnPress(event) {
+  if (event.code === "ArrowRight") {
+    onImgThumb(1);
+  }
+  if (event.code === "ArrowLeft") {
+    onImgThumb(-1);
+  }
+}
